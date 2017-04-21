@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+
 /**
  * Created by konstantin.petrukhnov@gmail.com on 2017-04-21.
  */
@@ -18,5 +20,14 @@ public class LogEntryService {
 
     public LogEntry add(LogEntry entry) {
         return logEntryRepository.save(entry);
+    }
+
+    @PostConstruct
+    public void generateDummyData() {
+        if (logEntryRepository.count() < 1) {
+            //generate data
+            //// TODO: 10
+
+        }
     }
 }
