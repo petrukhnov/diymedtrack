@@ -18,7 +18,7 @@ public class LogEntryController {
     @Autowired
     private LogEntryService logEntryService;
 
-    @RequestMapping(value = "/", method = RequestMethod.POST)
+    @RequestMapping(value = "", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public LogEntry get(@RequestBody LogEntry entry) {
         return logEntryService.add(entry);
