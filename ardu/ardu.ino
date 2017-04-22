@@ -15,12 +15,10 @@
 #define D9 3 // RX0 (Serial console)
 #define D10 1 // TX0 (Serial console)
 
-const char* ssid = "FIXME";
-const char* password = "FIXME";
-
-const char* host = "api.github.com";
-const int httpsPort = 443;
-const char* fingerprint = "CF 05 98 89 CA FF 8E D8 5E 5C E0 C2 E4 F7 E6 C3 C7 50 DD 5C";
+const char* ssid = "robo";
+const char* password = "airoairo";
+const char* host = "172.31.98.237";
+const int httpPort = 80;
 
 #define RST_PIN         D3
 #define SS_PIN          D8
@@ -52,7 +50,7 @@ void setup() {
   WiFiClientSecure client;
   Serial.print("connecting to ");
   Serial.println(host);
-  if (!client.connect(host, httpsPort)) {
+  if (!client.connect(host, httpPort)) {
     Serial.println("connection failed");
     return;
   }
@@ -63,36 +61,9 @@ void setup() {
     Serial.println("certificate doesn't match");
   }
 
-  String url = "/repos/esp8266/Arduino/commits/master/status";
+  String url = "/log";
   Serial.print("requesting URL: ");
   Serial.println(url);
-
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "User-Agent: BuildFailureDetectorESP8266\r\n" +
-               "Connection: close\r\n\r\n");
-
-  Serial.println("request sent");
-  while (client.connected()) {
-    String line = client.readStringUntil('\n');
-    if (line == "\r") {
-      Serial.println("headers received");
-      break;
-    }
-  }
-  String line = client.readStringUntil('\n');
-  if (line.startsWith("{\"state\":\"success\"")) {
-    Serial.println("esp8266/Arduino CI successfull!");
-  } else {
-    Serial.println("esp8266/Arduino CI has failed");
-  }
-  Serial.println("reply was:");
-  Serial.println("==========");
-  Serial.println(line);
-  Serial.println("==========");
-  Serial.println("closing connection");
-  
-
 
   SPI.begin();      // Init SPI bus
   mfrc522.PCD_Init();   // Init MFRC522
@@ -118,8 +89,18 @@ void loop() {
   Serial.println(name);
 
   //send data to server
-  //even get
+  String messagebody = "{\"deviceId\": \""+name+"\"}\r\n";
 
+  client.print(String("POST ") + url + " HTTP/1.1\r\n" +
+               "Host: " + host + "\r\n" +
+               "Content-Type: application/json\r\n" +
+               "User-Agent: diymedtrack\r\n" +
+               "Connection: close\r\n\r\n" +
+               "Content-Length: " +  String(messagebody.length()) + "\r\n\r\n");
+  //do post            
+  client.print(messagebody);
+  
+  
 
   /**
    * 

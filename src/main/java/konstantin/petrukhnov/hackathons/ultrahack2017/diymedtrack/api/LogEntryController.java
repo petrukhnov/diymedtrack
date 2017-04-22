@@ -20,7 +20,17 @@ public class LogEntryController {
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public LogEntry get(@RequestBody LogEntry entry) {
+    public LogEntry add(@RequestBody LogEntry entry) {
+        log.info("post data: {}", entry.getDeviceId());
         return logEntryService.add(entry);
+    }
+
+    @RequestMapping(value = "/test/{id}", method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public LogEntry addByGet(@RequestParam String id) {
+        log.info("get data: {}", id);
+        LogEntry logEntry = new LogEntry();
+        logEntry.setDeviceId(id);
+        return logEntryService.add(logEntry);
     }
 }

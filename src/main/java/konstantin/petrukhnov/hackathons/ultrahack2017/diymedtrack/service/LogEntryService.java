@@ -19,6 +19,7 @@ public class LogEntryService {
     private LogEntryRepository logEntryRepository;
 
     public LogEntry add(LogEntry entry) {
+        entry.setTimeUsed(System.currentTimeMillis());
         return logEntryRepository.save(entry);
     }
 
