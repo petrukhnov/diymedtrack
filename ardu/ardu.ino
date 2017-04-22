@@ -21,11 +21,18 @@
 //const char* password = "airoairo";
 //const char* host = "172.31.98.237";
 
-String url = "http://192.168.1.107:8080/log";
+String baseUrl =  "http://192.168.1.107:8080";
+String urlFeeling = "/feeling";
+String urlLog = "/log";
 
 #define RST_PIN         D3
 #define SS_PIN          D8
 MFRC522 mfrc522(SS_PIN, RST_PIN);
+
+#define LED_G          D2
+#define LED_R          D4
+#define B_G            10 //good, SD3
+#define B_B            9 //bad, SD2
 
 void setup() {
 
@@ -53,9 +60,25 @@ void setup() {
   mfrc522.PCD_Init();   // Init MFRC522
   mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
   Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
+
+  //extra leds and buttons
+  pinMode(LED_G, OUTPUT); 
+  pinMode(LED_R, OUTPUT); 
+  pinMode(B_G, INPUT_PULLUP); //2 contact button
+  pinMode(B_B, INPUT_PULLUP); //2 contact button
+
+  setLedsOff();
 }
 
 void loop() {
+
+  //feeling
+  if (digitalRead(B_G)==0) { //pullup button return 0 if pressed
+    sendFeeling(5);
+  } else if (digitalRead(B_B)==0) {
+    sendFeeling(1);
+  }
+  
 
 // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) {
@@ -73,8 +96,9 @@ void loop() {
   String cardId = getName(mfrc522.uid.uidByte, mfrc522.uid.size);
   Serial.println(cardId);
 
-  String response = sendLog(cardId);
+  int responseCode = sendLog(cardId);
   //todo return if responce is empty
+
 
   /**
    * 
@@ -95,13 +119,15 @@ void loop() {
 /**
  * return http code
  */
-String sendLog(String cardId) {
+int sendLog(String cardId) {
+
+  setLedsTransmit();
 
   //send data to server
   String messageBody = "{\"deviceId\": \""+cardId+"\"}\r\n";   
 
   HTTPClient http;
-  http.begin(url);      //Specify request destination
+  http.begin(baseUrl+urlLog);      //Specify request destination
   http.addHeader("Content-Type", "application/json");  //Specify content-type header
 
   int httpCode = http.POST(messageBody);   //Send the request
@@ -109,8 +135,47 @@ String sendLog(String cardId) {
 
   Serial.println(httpCode);   //Print HTTP return code
   Serial.println(payload);    //Print request response payload
-
+  
   http.end();  //Close connection
+
+  if (httpCode == 200) {
+    setLedsSuccess();
+  } else {
+    setLedsFailure();
+  }
+  delay(5000); //5 sec to show that it is done  
+  setLedsOff();
+
+  return httpCode;
+}
+
+
+int sendFeeling(int value) {
+
+  setLedsTransmit();
+
+  //send data to server
+  String messageBody = "{\"value\":"+String(value)+"}\r\n";   
+
+  HTTPClient http;
+  http.begin(baseUrl+urlFeeling);      //Specify request destination
+  http.addHeader("Content-Type", "application/json");  //Specify content-type header
+
+  int httpCode = http.POST(messageBody);   //Send the request
+  String payload = http.getString();                                        //Get the response payload
+
+  Serial.println(httpCode);   //Print HTTP return code
+  Serial.println(payload);    //Print request response payload
+  
+  http.end();  //Close connection
+
+  if (httpCode == 200) {
+    setLedsSuccess();
+  } else {
+    setLedsFailure();
+  }
+  delay(5000); //5 sec to show that it is done  
+  setLedsOff();
 
   return httpCode;
 }
@@ -127,6 +192,26 @@ String getName(byte *buffer, byte bufferSize) {
     return name;
 }
 
+
+void setLedsTransmit() {
+    digitalWrite(LED_G, HIGH);   // Turn the LED on (Note that LOW is the voltage level
+    digitalWrite(LED_R, HIGH);  
+}
+
+void setLedsSuccess() {
+    digitalWrite(LED_G, HIGH);   // Turn the LED on (Note that LOW is the voltage level
+    digitalWrite(LED_R, LOW);  
+}
+
+void setLedsFailure() {
+    digitalWrite(LED_G, LOW);   // Turn the LED on (Note that LOW is the voltage level
+    digitalWrite(LED_R, HIGH);  
+}
+
+void setLedsOff() {
+    digitalWrite(LED_G, LOW);   // Turn the LED on (Note that LOW is the voltage level
+    digitalWrite(LED_R, LOW);  
+}
 
 
 
