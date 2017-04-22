@@ -2,6 +2,8 @@
 #include <MFRC522.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
+#include <ESP8266HTTPClient.h>
+
 
 #define D0 16
 #define D1 5 // I2C Bus SCL (clock)
@@ -15,10 +17,11 @@
 #define D9 3 // RX0 (Serial console)
 #define D10 1 // TX0 (Serial console)
 
-const char* ssid = "robo";
-const char* password = "airoairo";
-const char* host = "172.31.98.237";
-const int httpPort = 80;
+//const char* ssid = "robo";
+//const char* password = "airoairo";
+//const char* host = "172.31.98.237";
+
+String url = "http://192.168.1.107:8080/log";
 
 #define RST_PIN         D3
 #define SS_PIN          D8
@@ -33,12 +36,11 @@ void setup() {
   mfrc522.PCD_Init();    // Init MFRC522
 
   
-  //http example
-  Serial.print("connecting to ");
-  Serial.println(ssid);
+  //connect to wifi
+  Serial.println("connecting to " +String(ssid));
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    delay(2000);
     Serial.print(".");
   }
   Serial.println("");
@@ -46,25 +48,7 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
-  // Use WiFiClientSecure class to create TLS connection
-  WiFiClientSecure client;
-  Serial.print("connecting to ");
-  Serial.println(host);
-  if (!client.connect(host, httpPort)) {
-    Serial.println("connection failed");
-    return;
-  }
-
-  if (client.verify(fingerprint, host)) {
-    Serial.println("certificate matches");
-  } else {
-    Serial.println("certificate doesn't match");
-  }
-
-  String url = "/log";
-  Serial.print("requesting URL: ");
-  Serial.println(url);
-
+  //NFC setup
   SPI.begin();      // Init SPI bus
   mfrc522.PCD_Init();   // Init MFRC522
   mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
@@ -83,31 +67,52 @@ void loop() {
     return;
   }
 
+  //get card Id
   Serial.print(F("Card UID: "));
   //dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
-  String name = getName(mfrc522.uid.uidByte, mfrc522.uid.size);
-  Serial.println(name);
+  String cardId = getName(mfrc522.uid.uidByte, mfrc522.uid.size);
+  Serial.println(cardId);
 
-  //send data to server
-  String messagebody = "{\"deviceId\": \""+name+"\"}\r\n";
-
-  client.print(String("POST ") + url + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "Content-Type: application/json\r\n" +
-               "User-Agent: diymedtrack\r\n" +
-               "Connection: close\r\n\r\n" +
-               "Content-Length: " +  String(messagebody.length()) + "\r\n\r\n");
-  //do post            
-  client.print(messagebody);
-  
-  
+  String response = sendLog(cardId);
+  //todo return if responce is empty
 
   /**
    * 
    * Extra: leds: every 15 min check serv, if need show unused (blink led 5-1s)
+   * when scanned: blink green 1-1
+   * when sent to server: green led on for 10 sec
+   * when not sent: red led on for 15 sec
+   * 
+   * 
    * Buttons: any time press good or bad
+   * 5 buttons: very bad, bad, normal, good, verygood (or just 2: good/bad)
+   * 
+   * 
    */
   
+}
+
+/**
+ * return http code
+ */
+String sendLog(String cardId) {
+
+  //send data to server
+  String messageBody = "{\"deviceId\": \""+cardId+"\"}\r\n";   
+
+  HTTPClient http;
+  http.begin(url);      //Specify request destination
+  http.addHeader("Content-Type", "application/json");  //Specify content-type header
+
+  int httpCode = http.POST(messageBody);   //Send the request
+  String payload = http.getString();                                        //Get the response payload
+
+  Serial.println(httpCode);   //Print HTTP return code
+  Serial.println(payload);    //Print request response payload
+
+  http.end();  //Close connection
+
+  return httpCode;
 }
 
 /**

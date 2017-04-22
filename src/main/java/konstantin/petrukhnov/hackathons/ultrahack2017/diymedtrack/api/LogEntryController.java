@@ -27,7 +27,7 @@ public class LogEntryController {
 
     @RequestMapping(value = "/test/{id}", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public LogEntry addByGet(@RequestParam String id) {
+    public LogEntry addByGet(@PathVariable String id) {
         log.info("get data: {}", id);
         LogEntry logEntry = new LogEntry();
         logEntry.setDeviceId(id);
