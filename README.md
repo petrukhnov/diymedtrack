@@ -27,6 +27,16 @@ Adding few buttons (very bad, bad, normal, good, very good) will allow to track 
 
 Kids could be more tempted to use medication properly, as it provide feedback, and they could build system themselves.
 
+Parents will better understand how their kids use inhalers.
+
+# Possibility for business
+
+Companies that manufacture inhalers could attach NFC tag and provide inexpensive service to host data.
+
+Companies may provide tracking boxes (record additional data: feeling, etc). 
+
+Companies could provide mobile app, that on NFC phone can provide full solution.
+
 
 
 # Original description from Ultrahack
