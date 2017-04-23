@@ -17,11 +17,9 @@
 #define D9 3 // RX0 (Serial console)
 #define D10 1 // TX0 (Serial console)
 
-//const char* ssid = "robo";
-//const char* password = "airoairo";
-//const char* host = "172.31.98.237";
-
-String baseUrl =  "http://192.168.1.107:8080";
+const char* ssid = "robo";
+const char* password = "airoairo";
+String baseUrl =  "http://172.31.98.237:8080";
 String urlFeeling = "/feeling";
 String urlLog = "/log";
 

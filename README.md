@@ -15,9 +15,19 @@ E.g. User was supposed to use inhaler twice a day, but lsat 2 month he skipped h
 # How
 
 User add NFC sticker to inhaler. Each time when he use, he scan it with IoT device (arduino based). Data is stored on server, and could be retreived or analyzed.
-Patien completely owns the data.
+Patient completely owns the data.
 
 See concept.png
+
+# Hardware
+
+NodeMCU (arduino+wifi), RFID-RC522, bunch of wires and few leds and buttons.
+
+See wires.jpg for assembled version.
+
+# Software
+
+Java, Spring Boot, Mongo, Gradle
 
 # Possible pivots
 

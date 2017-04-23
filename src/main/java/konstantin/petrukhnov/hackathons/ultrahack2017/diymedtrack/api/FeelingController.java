@@ -23,6 +23,7 @@ public class FeelingController {
     @RequestMapping(value = "", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public Feeling add(@RequestBody Feeling entry) {
+        log.info("post data: {}", entry.getValue());
         return feelingService.add(entry);
     }
 
